@@ -4,7 +4,9 @@ from ulauncher.api.shared.event import KeywordQueryEvent, ItemEnterEvent
 from ulauncher.api.shared.item.ExtensionResultItem import ExtensionResultItem
 from ulauncher.api.shared.action.RenderResultListAction import RenderResultListAction
 from ulauncher.api.shared.action.HideWindowAction import HideWindowAction
+from ulauncher.api.shared.action.RunScriptAction import RunScriptAction
 
+import subprocess
 
 class XfwmWorkspaceExtension(Extension):
 
@@ -16,12 +18,19 @@ class XfwmWorkspaceExtension(Extension):
 class KeywordQueryEventListener(EventListener):
 
     def on_event(self, event, extension):
+        keyword = event.get_keyword()
+        search = event.get_argument()
+
         items = []
-        for i in range(5):
-            items.append(ExtensionResultItem(icon='images/workspace-switcher-top-left.svg',
-                                             name='Item %s' % i,
-                                             description='Item description %s' % i,
-                                             on_enter=HideWindowAction()))
+        result = subprocess.run(['xfconf-query -c xfwm4 -p /general/workspace_names | tail -n +3'], capture_output=True, shell=True, text=True).stdout
+        ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
+
+        for ws_idx, ws_name in enumerate(ws_list):
+            if str(search or '').lower() in ws_name.lower():
+                items.append(ExtensionResultItem(icon='images/workspace-switcher-top-left.svg',
+                                                name=ws_name,
+                                                description=f'Workspace {ws_name}:{ws_idx}',
+                                                on_enter=RunScriptAction(f'wmctrl -s {ws_idx}')))
 
         return RenderResultListAction(items)
 
