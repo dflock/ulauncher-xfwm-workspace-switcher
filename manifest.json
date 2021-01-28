@@ -1,0 +1,18 @@
+{
+  "required_api_version": "^2.0.0",
+  "name": "Xfwm Workspace Switcher",
+  "description": "Find and switch xfwm workspaces",
+  "developer_name": "Duncan Lock",
+  "icon": "images/workspace-switcher.svg",
+  "options": {
+    "query_debounce": 0.1
+  },
+  "preferences": [
+    {
+      "id": "xfwm_ws_kw",
+      "type": "keyword",
+      "name": "Workspace Switcher Keyword",
+      "default_value": "ws"
+    }
+  ]
+}
