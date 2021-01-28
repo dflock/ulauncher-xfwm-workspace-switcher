@@ -19,17 +19,18 @@ class KeywordQueryEventListener(EventListener):
 
     def on_event(self, event, extension):
         keyword = event.get_keyword()
-        search = event.get_argument()
+        search = str(event.get_argument() or '').lower().strip()
 
         items = []
         result = subprocess.run(['xfconf-query -c xfwm4 -p /general/workspace_names | tail -n +3'], capture_output=True, shell=True, text=True).stdout
         ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
 
         for ws_idx, ws_name in enumerate(ws_list):
-            if str(search or '').lower() in ws_name.lower():
+            if search in ws_name.lower():
                 items.append(ExtensionResultItem(icon='images/workspace-switcher-top-left.svg',
-                                                name=ws_name,
-                                                description=f'Workspace {ws_name}:{ws_idx}',
+                                                # Workaround for https://github.com/Ulauncher/Ulauncher/issues/587
+                                                name=ws_name.replace('&', '&amp;') if search else ws_name,
+                                                description=f'Workspace Name: {ws_name}, Workspace Id: {ws_idx}',
                                                 on_enter=RunScriptAction(f'wmctrl -s {ws_idx}')))
 
         return RenderResultListAction(items)
