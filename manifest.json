@@ -11,7 +11,7 @@
     {
       "id": "xfwm_ws_kw",
       "type": "keyword",
-      "name": "Workspace Switcher Keyword",
+      "name": "Workspace Switcher",
       "default_value": "ws"
     }
   ]
