@@ -22,6 +22,8 @@ class KeywordQueryEventListener(EventListener):
         search = str(event.get_argument() or '').lower().strip()
 
         items = []
+        # TODO: I think this is the only xfce/xfwm specific code in here
+        # and you could probably do this with wmctrl insetad, making it more general.
         result = subprocess.run(['xfconf-query -c xfwm4 -p /general/workspace_names | tail -n +3'], capture_output=True, shell=True, text=True).stdout
         ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
 
