@@ -28,7 +28,7 @@ class KeywordQueryEventListener(EventListener):
         ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
 
         for ws_idx, ws_name in enumerate(ws_list):
-            if search in ws_name.lower():
+            if search == '' or search in ws_name.lower():
                 items.append(ExtensionResultItem(icon='images/workspace-switcher-top-left.svg',
                                                 # Workaround for https://github.com/Ulauncher/Ulauncher/issues/587
                                                 name=ws_name.replace('&', '&amp;') if search else ws_name,
