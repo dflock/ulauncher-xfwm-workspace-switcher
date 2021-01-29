@@ -1,6 +1,6 @@
-# Xfwm Workspace Switcher plugin for Ulauncher
+# Workspace Switcher plugin for Ulauncher
 
-This is a plugin for [uLauncher](https://ulauncher.io/) that lets you search & switch between XFCE/Xfwm workspaces by name:
+This is a plugin for [uLauncher](https://ulauncher.io/) that lets you search & switch between Linux/X11 Workspaces by name:
 
 ![](./screenshots/search.png)
 
