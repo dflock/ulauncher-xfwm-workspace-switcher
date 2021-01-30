@@ -12,7 +12,7 @@
       "id": "ws_kw",
       "type": "keyword",
       "name": "Workspace Switcher",
-      "default_value": "ws"
+      "default_value": "w"
     }
   ]
 }
