@@ -59,6 +59,11 @@ class KeywordQueryEventListener(EventListener):
 
         self.get_current_ws()
 
+        if search == '':
+            # No search so far, just keyword.
+            # Get updated list of workspaces, before user starts searching
+            self.get_ws_list()
+
         if search.isdigit():
             # If search is a number, then shortcut to that workspace.
             action = f'wmctrl -s {abs(int(search) - 1)} && {self.lws_save()}'
