@@ -8,12 +8,26 @@ from ulauncher.api.shared.action.RunScriptAction import RunScriptAction
 
 import subprocess
 from os import path
+import re
 
 class WorkspaceExtension(Extension):
 
     def __init__(self):
-        super(WorkspaceExtension, self).__init__()
-        self.subscribe(KeywordQueryEvent, KeywordQueryEventListener())
+        # Check that wmctrl is installed
+        import shutil
+        # Check that we have wmctrl before continuing
+        if shutil.which("wmctrl"):
+            # We have wmctrl, hook up extension
+            super(WorkspaceExtension, self).__init__()
+            self.subscribe(KeywordQueryEvent, KeywordQueryEventListener())
+        else:
+            # No wmctrl, so bail
+            import logging
+            logger = logging.getLogger(__name__)
+            e = 'Missing Dependency: wmctrl not found on $PATH'
+            logger.error(e)
+            import sys
+            sys.exit()
 
 
 class KeywordQueryEventListener(EventListener):
@@ -28,27 +42,43 @@ class KeywordQueryEventListener(EventListener):
         self.get_ws_list()
     
     def get_current_ws(self):
-        # Get current workspace ID & name: [id, name]
-        self.curr_ws = subprocess.run(['wmctrl -d | grep -F " * DG:" | awk \'{$2=$3=$4=$5=$6=$7=$8=$9=""; print $0}\''], capture_output=True, shell=True, text=True).stdout.strip().split(maxsplit=1)
+        """Get current workspace ID & name: [id, name]"""
+
+        # Get the current workspace line from wmctrl
+        tmp = subprocess.run(["wmctrl -d | grep -F ' * DG:'"], capture_output=True, shell=True, text=True).stdout.strip()
+        # Extract the workspace id
+        id = tmp.split()[0]
+        # Extract the workspace name
+        name = ''
+        m = re.search('^.*WA: (N/A|.,. \d+x\d+) *', tmp)
+        if m and m.span():
+            name = tmp[m.span()[1]:]
+
+        self.curr_ws = [id, name]
     
     def lws_save(self):
-        # Return shell command to save the current workspace
+        """Return shell command to save the current workspace
+
+        This is done like this, so that it can be run (sort of) atomically
+        in the same shell command that changes the workspace.
+        """
         return f'echo -n "{self.curr_ws[0]}    {self.curr_ws[1]}" > "{self.lws}"'
 
     def init_lws(self):
-        # If no "$HOME/.lws", then create & populate 
-        subprocess.run([f'if [ ! -f "{self.lws}" ]; then {self.lws_save()}; fi'], shell=True)
+        """If no "$HOME/.lws", then create & populate """
+        with open(path.expandvars(self.lws), 'a+') as f:
+            f.write(f'{self.curr_ws[0]}    {self.curr_ws[1]}')
 
     def get_last_ws(self):
-        # Read the last workspace into self.last_ws & return it
+        """Read the last workspace into self.last_ws & return it"""
         ws = None
         with open(path.expandvars(self.lws), 'r') as file:
             ws = file.read()
         return ws.split(maxsplit=1)
 
     def get_ws_list(self):
-        # Get list of all workspaces
-        result = subprocess.run(['wmctrl -d | awk \'{$1=$2=$3=$4=$5=$6=$7=$8=$9=""; print $0}\''], capture_output=True, shell=True, text=True).stdout
+        """Get list of all workspaces"""
+        result = subprocess.run(["wmctrl -d | sed -n -E -e 's/^.*WA: (N\/A|.,. [[:digit:]]+x[[:digit:]]+)  //p'"], capture_output=True, shell=True, text=True).stdout
         self.ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
 
     def on_event(self, event, extension):
