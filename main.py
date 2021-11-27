@@ -26,8 +26,7 @@ class WorkspaceExtension(Extension):
             import logging
 
             logger = logging.getLogger(__name__)
-            e = "Missing Dependency: wmctrl not found on $PATH"
-            logger.error(e)
+            logger.error("Missing Dependency: wmctrl not found on $PATH")
             import sys
 
             sys.exit()
@@ -66,12 +65,14 @@ class KeywordQueryEventListener(EventListener):
         This is done like this, so that it can be run (sort of) atomically
         in the same shell command that changes the workspace.
         """
-        return f'echo -n "{self.curr_ws[0]}    {self.curr_ws[1]}" > "{self.lws}"'
+        return 'echo -n "{}    {}" > "{}"'.format(
+            self.curr_ws[0], self.curr_ws[1], self.lws
+        )
 
     def init_lws(self):
         """If no "$HOME/.lws", then create & populate"""
         with open(path.expandvars(self.lws), "a+") as f:
-            f.write(f"{self.curr_ws[0]}    {self.curr_ws[1]}")
+            f.write("{}    {}".format(self.curr_ws[0], self.curr_ws[1]))
 
     def get_last_ws(self):
         """Read the last workspace into self.last_ws & return it"""
@@ -107,24 +108,26 @@ class KeywordQueryEventListener(EventListener):
 
         if search.isdigit():
             # If search is a number, then shortcut to that workspace.
-            action = f"wmctrl -s {abs(int(search) - 1)} && {self.lws_save()}"
+            action = "wmctrl -s {} && {}".format(abs(int(search) - 1), self.lws_save())
             items.append(
                 ExtensionResultItem(
                     icon="images/workspace-switcher-top-left.svg",
-                    name=f"Workspace {search}",
-                    description=f"Go to workspce {search}",
+                    name="Workspace {}".format(search),
+                    description="Go to workspce {}".format(search),
                     on_enter=RunScriptAction(action),
                 )
             )
         elif search == "-":
             # Shortcut to return to your previous workspace, like `cd -` does.
             lws = self.get_last_ws()
-            action = f'wmctrl -s "{lws[0]}" && {self.lws_save()}'
+            action = 'wmctrl -s "{}" && {}'.format(lws[0], self.lws_save())
             items.append(
                 ExtensionResultItem(
                     icon="images/workspace-switcher-top-left.svg",
-                    name=f"Go back to last used workspace",
-                    description=f"Workspace Name: {lws[1]}, Workspace Id: {int(lws[0]) + 1}",
+                    name="Go back to last used workspace",
+                    description="Workspace Name: {}, Workspace Id: {}".format(
+                        lws[1], int(lws[0]) + 1
+                    ),
                     on_enter=RunScriptAction(action),
                 )
             )
@@ -132,13 +135,15 @@ class KeywordQueryEventListener(EventListener):
             # Otherwise, match on workspace names
             for ws_idx, ws_name in enumerate(self.ws_list):
                 if search == "" or search in ws_name.lower():
-                    action = f"wmctrl -s {ws_idx} && {self.lws_save()}"
+                    action = "wmctrl -s {} && {}".format(ws_idx, self.lws_save())
                     items.append(
                         ExtensionResultItem(
                             icon="images/workspace-switcher-top-left.svg",
                             # Workaround for https://github.com/Ulauncher/Ulauncher/issues/587
                             name=ws_name.replace("&", "&amp;") if search else ws_name,
-                            description=f"Workspace Name: {ws_name}, Workspace Id: {int(ws_idx) + 1}",
+                            description="Workspace Name: {}, Workspace Id: {}".format(
+                                ws_name, int(ws_idx) + 1
+                            ),
                             on_enter=RunScriptAction(action),
                         )
                     )
