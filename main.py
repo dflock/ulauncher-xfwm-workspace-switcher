@@ -91,7 +91,7 @@ class KeywordQueryEventListener(EventListener):
             shell=True,
             text=True,
         ).stdout
-        self.ws_list = [y for y in (x.strip() for x in result.splitlines()) if y]
+        self.ws_list = [y for y in (x.strip() for x in result.split("\n")) if y]
 
     def on_event(self, event, extension):
         keyword = event.get_keyword()
